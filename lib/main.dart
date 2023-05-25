@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 void main() {
-  runApp(MaterialApp(
-    title: 'Flutter Riverpod Demo',
-    theme: ThemeData(
-      primarySwatch: Colors.blue,
+  runApp(ProviderScope(
+    child: MaterialApp(
+      title: 'Flutter Riverpod Demo',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      darkTheme: ThemeData.dark(),
+      themeMode: ThemeMode.dark,
+      debugShowCheckedModeBanner: false,
+      home: const HomePage(),
     ),
-    darkTheme: ThemeData.dark(),
-    themeMode: ThemeMode.dark,
-    debugShowCheckedModeBanner: false,
-    home: const HomePage(),
   ));
 }
 
@@ -44,11 +47,35 @@ Future<WeatherEmoji> getWeather(City city) {
   );
 }
 
-class HomePage extends StatelessWidget {
+const unknownWeatherEmoji = '🤷';
+
+/// This provider stores a state which can be changed
+/// by the UI later in the code
+final currentCityProvider = StateProvider<City?>(
+  (ref) => null,
+);
+
+/// This provider is read by the UI
+///
+/// Checks if the currentCityProvider has a city or not
+/// If it has a city, then [getWeather] function is called on that city
+/// Else [unknownWeatherEmoji] is returned.
+final weatherProvider = FutureProvider<WeatherEmoji>(
+  (ref) {
+    final city = ref.watch(currentCityProvider);
+    if (city != null) {
+      return getWeather(city);
+    } else {
+      return unknownWeatherEmoji;
+    }
+  },
+);
+
+class HomePage extends ConsumerWidget {
   const HomePage({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Weather'),
